@@ -1,50 +1,62 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import WagonSelector from "../components/WagonSelector";
 import SeatMap from "../components/SeatMap";
 import BookingForm from "../components/BookingForm";
-import { saveBooking } from "../services/BookingService";
-import { toast } from "react-toastify";
-import { useParams } from "react-router-dom";
-
+import { saveBooking, getBookedSeats } from "../services/BookingService";
 
 export default function Booking() {
-    const [wagon, setWagon] = useState(1);
-    const [selectedSeats, setSelectedSeats] = useState([]);
+  const { trainId } = useParams();
+  const navigate = useNavigate();
 
-    const toggleSeat = (seat) => {
-        setSelectedSeats(prev =>
-            prev.includes(seat)
-                ? prev.filter(s => s !== seat)
-                : [...prev, seat]
-        );
-    };
+  const [wagon, setWagon] = useState(1);
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
-    const { trainId } = useParams();
+  const bookedSeats = getBookedSeats(trainId, wagon);
 
-    const handleBooking = (form) => {
-        saveBooking({
-            trainId: Number(trainId), 
-            wagon,
-            seats: selectedSeats,
-            ...form
-        });
-
-        toast.success("Квитки заброньовано!");
-        setSelectedSeats([]);
-    };
-
-    return (
-        <div>
-            <h1>Бронювання</h1>
-
-            <WagonSelector selected={wagon} onSelect={setWagon} />
-
-            <SeatMap
-                selectedSeats={selectedSeats}
-                onToggle={toggleSeat}
-            />
-
-            <BookingForm onSubmit={handleBooking} />
-        </div>
+  const toggleSeat = (seat) => {
+    setSelectedSeats(prev =>
+      prev.includes(seat)
+        ? prev.filter(s => s !== seat)
+        : [...prev, seat]
     );
+  };
+
+  const handleBooking = (form) => {
+    if (selectedSeats.length === 0) {
+      alert("Обери хоча б одне місце");
+      return;
+    }
+
+    saveBooking({
+      trainId: Number(trainId),
+      wagon,
+      seats: selectedSeats,
+      ...form
+    });
+
+    navigate("/", { state: { success: true } });
+  };
+
+  return (
+    <div>
+      <h1>Бронювання</h1>
+
+      <WagonSelector
+        selected={wagon}
+        onSelect={(w) => {
+          setWagon(w);
+          setSelectedSeats([]); 
+        }}
+      />
+
+      <SeatMap
+        selectedSeats={selectedSeats}
+        onToggle={toggleSeat}
+        bookedSeats={bookedSeats}
+      />
+
+      <BookingForm onSubmit={handleBooking} />
+    </div>
+  );
 }

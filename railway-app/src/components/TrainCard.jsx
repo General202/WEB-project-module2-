@@ -4,7 +4,7 @@ import { getBookedSeatsCount } from "../services/BookingService";
 export default function TrainCard({ train }) {
   const navigate = useNavigate();
 
-  const totalSeats = 20; 
+  const totalSeats = 60; 
   const booked = getBookedSeatsCount(train.id); 
   const free = totalSeats - booked; 
 
